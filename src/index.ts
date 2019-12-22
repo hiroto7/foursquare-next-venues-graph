@@ -18,6 +18,34 @@ const to_hhmmss = (date: Date) =>
 
 const to_YYYYMMDDThhmmss = (date: Date) => `${to_YYYYMMDD(date)}T${to_hhmmss(date)}`;
 
+const requestNextVenues = async (currentVenue: Venue): Promise<readonly Venue[]> => {
+  const body = await retry(
+    async bail => {
+      try {
+        return await rp({
+          url: `https://api.foursquare.com/v2/venues/${currentVenue.id}/nextvenues`,
+          method: 'GET',
+          qs: {
+            client_id: '',
+            client_secret: '',
+            v: '20180323'
+          },
+          json: true
+        });
+      } catch (e) {
+        if (e instanceof StatusCodeError && e.statusCode === 403) {
+          bail(e);
+          return;
+        }
+        throw e;
+      }
+    },
+    { onRetry: (e: Error, attempt: number) => console.error(e, attempt) }
+  );
+  const nextVenues: readonly Venue[] = body.response.nextVenues.items;
+  return nextVenues;
+}
+
 const f1 = async (firstVenue: Venue) => {
   const venues = new Map<string, Venue>([[firstVenue.id, firstVenue]]);
   const edgeLists: (readonly (readonly [Venue, Venue])[])[] = [[]];
@@ -31,33 +59,14 @@ const f1 = async (firstVenue: Venue) => {
       nextVenues = [];
       const edges = [...edgeLists[edgeLists.length - 1]];
 
-      const currentAndNextsPairs = await Bluebird.map(currentVenues, async currentVenue => {
-        const body = await retry(
-          async bail => {
-            try {
-              return await rp({
-                url: `https://api.foursquare.com/v2/venues/${currentVenue.id}/nextvenues`,
-                method: 'GET',
-                qs: {
-                  client_id: '',
-                  client_secret: '',
-                  v: '20180323'
-                },
-                json: true
-              });
-            } catch (e) {
-              if (e instanceof StatusCodeError && e.statusCode === 403) {
-                bail(e);
-                return;
-              }
-              throw e;
-            }
-          },
-          { onRetry: (e: Error, attempt: number) => console.error(e, attempt) }
-        );
-        const nextVenues: Venue[] = body.response.nextVenues.items;
-        return { currentVenue, nextVenues };
-      }, { concurrency: 10 });
+      const currentAndNextsPairs = await Bluebird.map(
+        currentVenues,
+        async (currentVenue: Venue) => ({
+          currentVenue,
+          nextVenues: await requestNextVenues(currentVenue),
+        }),
+        { concurrency: 10 }
+      );
       requestsCount += currentAndNextsPairs.length;
 
       for (const { currentVenue, nextVenues: items } of currentAndNextsPairs) {

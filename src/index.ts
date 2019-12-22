@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
-import { Venue, Venue1 } from './Venue';
+import { Venue1, Venue2 } from './Venue';
 
 const to_YYYYMMDD = (date: Date) =>
   `${date.getFullYear()}` +
@@ -19,7 +19,7 @@ const to_hhmmss = (date: Date) =>
 
 const to_YYYYMMDDThhmmss = (date: Date) => `${to_YYYYMMDD(date)}T${to_hhmmss(date)}`;
 
-const requestNextVenues = async (currentVenue: Venue): Promise<readonly Venue[]> => {
+const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[]> => {
   const body = await retry(
     async bail => {
       try {
@@ -43,13 +43,13 @@ const requestNextVenues = async (currentVenue: Venue): Promise<readonly Venue[]>
     },
     { onRetry: (e: Error, attempt: number) => console.error(e, attempt) }
   );
-  const nextVenues: readonly Venue[] = body.response.nextVenues.items;
+  const nextVenues: readonly Venue1[] = body.response.nextVenues.items;
   return nextVenues;
 }
 
-const f1 = async (firstVenue: Venue) => {
-  const venues = new Map<string, Venue>([[firstVenue.id, firstVenue]]);
-  const edgeLists: (readonly (readonly [Venue, Venue])[])[] = [[]];
+const f1 = async (firstVenue: Venue1) => {
+  const venues = new Map<string, Venue1>([[firstVenue.id, firstVenue]]);
+  const edgeLists: (readonly (readonly [Venue1, Venue1])[])[] = [[]];
   let nextVenues = [firstVenue];
   let requestsCount = 0;
 
@@ -61,7 +61,7 @@ const f1 = async (firstVenue: Venue) => {
 
       const currentAndNextsPairs = await Bluebird.map(
         currentVenues,
-        async (currentVenue: Venue) => ({
+        async (currentVenue: Venue1) => ({
           currentVenue,
           nextVenues: await requestNextVenues(currentVenue),
         }),
@@ -116,7 +116,7 @@ const f2 = async () => {
       },
       json: true
     });
-    const firstVenue: Venue1 = body.response.venue;
+    const firstVenue: Venue2 = body.response.venue;
     await f1(firstVenue);
   } catch (e) {
     console.error(e);

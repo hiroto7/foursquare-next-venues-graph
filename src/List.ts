@@ -14,7 +14,10 @@ export interface List {
   canonicalUrl: string;
   createdAt: number,
   updatedAt: number,
-  photo: Photo2;
+  photo?: Photo2;
+  logView?: true;
+  guideType?: "bestOf";
+  guide?: true;
   followers: {
     count: number;
   };

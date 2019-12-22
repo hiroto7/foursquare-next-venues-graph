@@ -7,5 +7,5 @@ export interface Likes {
     count: number;
     items: User[];
   }[];
-  summary: string;
+  summary?: string;
 }

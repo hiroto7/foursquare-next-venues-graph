@@ -1,10 +1,16 @@
+import { Contact } from './Contact';
+import { Lang } from './Lang';
 import { Likes } from './Likes';
 import { List } from './List';
 import { Photo1, Photo2 } from "./Photo";
 import { Tip } from './Tip';
+import { User1 } from './User';
 
 export interface Venue {
   id: string;
+}
+
+export interface Venue1 extends Venue {
   name: string;
   location: Location;
   categories: Category[];
@@ -15,9 +21,9 @@ interface Location {
   crossStreet?: string;
   lat: number;
   lng: number;
-  labeledLatLngs: LabeledLatLng[];
+  labeledLatLngs?: LabeledLatLng[];
   distance?: number;
-  postalCode: string;
+  postalCode?: string;
   cc: string;
   neighborhood?: string;
   city: string;
@@ -27,7 +33,7 @@ interface Location {
 }
 
 interface LabeledLatLng {
-  label: string;
+  label: "display";
   lat: number;
   lng: number;
 }
@@ -46,48 +52,56 @@ interface Icon {
   suffix: string;
 }
 
-export interface Venue1 extends Venue {
+export interface Venue2 extends Venue1 {
   contact: Contact;
   canonicalUrl: string;
   verified: boolean;
   stats: Stats;
+  price?: Price;
+  url?: string;
   likes: Likes;
   dislike: boolean;
   ok: boolean;
   rating: number;
   ratingColor: string;
   ratingSignals: number;
-  allowMenuUrlEdit: boolean,
+  allowMenuUrlEdit?: true,
   beenHere: BeenHere;
   specials: Specials;
+  events?: Events;
   photos: Photos;
+  venuePage?: VenuePage;
   reasons: Reasons;
+  description?: string;
+  storeId?: "";
+  page?: Page;
   hereNow: HereNow;
   createdAt: number;
   tips: Tips;
   shortUrl: string;
   timeZone: TimeZone;
   listed: Listed;
-  hours: Hours;
+  hours?: Hours;
+  popular: Hours;
   pageUpdates: PageUpdates;
   inbox: Inbox;
+  parent?: Venue1;
+  hierarchy?: Hierarchy[];
   attributes: Attributes;
   bestPhoto: Photo1;
   colors: Colors;
-}
-
-interface Contact {
-  phone?: string;
-  formattedPhone?: string;
-  facebook?: string;
-  facebookUsername?: string;
-  facebookName?: string;
 }
 
 interface Stats {
   checkinsCount?: number;
   usersCount?: number;
   tipCount: number;
+}
+
+interface Price {
+  tier: 2;
+  message: "Moderate";
+  currency: "$";
 }
 
 interface BeenHere {
@@ -102,6 +116,11 @@ interface Specials {
   items: never[];
 }
 
+interface Events {
+  count: number;
+  summary: string;
+}
+
 interface Photos {
   count: number,
   groups: [
@@ -113,20 +132,63 @@ interface Photos {
     }
   ]
 }
+interface VenuePage {
+  id: string;
+}
 
 interface Reasons {
   count: number;
-  items: {
-    summary: "Lots of people like this place";
-    type: "general";
-    reasonName: "rawLikesReason";
-  }[];
+  items: [
+    {
+      summary: string;
+      type: "general";
+      reasonName: "rawLikesReason";
+    } | {
+      summary: string;
+      type: "general";
+      reasonName: "upcomingEventsReason";
+      target?: {
+        type: "navigation";
+        object: {
+          id: string;
+          type: "events";
+          target: {
+            type: "path";
+            url: string;
+          };
+          ignorable: false;
+        }
+      };
+    }
+  ];
 }
+
+interface Page {
+  pageInfo?: {
+    description: string;
+    banner: string;
+    links: {
+      count: 1;
+      items: [
+        {
+          url: string;
+        }
+      ];
+    };
+  };
+  user: User1;
+}
+
 
 interface HereNow {
   count: number;
-  summary: "Nobody here";
-  groups: never[];
+  summary: string;
+  groups: {
+    type: "others";
+    name: "Other people here";
+    count: number;
+    items: [];
+  }[];
 }
 
 interface Tips {
@@ -139,7 +201,7 @@ interface Tips {
   }[];
 }
 
-type TimeZone = "Asia/Tokyo";
+type TimeZone = "Asia/Tokyo" | "America/New_York";
 
 interface Listed {
   count: number;
@@ -154,22 +216,20 @@ interface Listed {
 }
 
 interface Hours {
-  status: string;
-  richStatus: {
+  status?: string;
+  richStatus?: {
     entities: [];
     text: string;
   };
   isOpen: boolean;
   isLocalHoliday: boolean;
-  dayData: [];
+  dayData?: [];
   timeframes: {
     days: string;
-    includesToday: boolean;
-    open: [
-      {
-        renderedTime: string
-      }
-    ];
+    includesToday?: true;
+    open: {
+      renderedTime: string;
+    }[];
     segments: [];
   }[];
 }
@@ -184,21 +244,25 @@ interface Inbox {
   items: never[];
 }
 
+interface Hierarchy {
+  name: string;
+  lang: Lang;
+  id: string;
+  canonicalUrl: string;
+}
+
 interface Attributes {
-  groups: [
-    {
-      type: "payments",
-      name: "Credit Cards",
-      summary: "Credit Cards",
-      count: 5,
-      items: [
-        {
-          "displayName": "Credit Cards",
-          "displayValue": "Yes"
-        }
-      ]
-    }
-  ]
+  groups: {
+    type: string;
+    name: string;
+    summary?: string;
+    count: number;
+    items: {
+      displayName: string;
+      displayValue: string;
+      priceTier?: number;
+    }[];
+  }[];
 }
 
 interface Colors {

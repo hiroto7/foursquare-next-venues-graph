@@ -74,6 +74,10 @@ const f1 = async (firstVenue: Venue) => {
       }
 
       edgeLists.push(edges);
+
+      if (nextVenues.length === 0) {
+        break;
+      }
     }
   } catch (e) {
     console.error(e);

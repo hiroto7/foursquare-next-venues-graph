@@ -1,11 +1,11 @@
 import retry from 'async-retry';
 import Bluebird from 'bluebird';
+import stringify from 'csv-stringify/lib/sync';
 import * as fs from 'fs';
 import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
 import { Venue, Venue1 } from './Venue';
-import stringify from 'csv-stringify/lib/sync';
 
 const to_YYYYMMDD = (date: Date) =>
   `${date.getFullYear()}` +
@@ -55,7 +55,6 @@ const f1 = async (firstVenue: Venue) => {
 
   try {
     for (let i = 0; i < 50; i++) {
-      console.log(i, requestsCount);
       const currentVenues = nextVenues;
       nextVenues = [];
       const edges = [...edgeLists[edgeLists.length - 1]];
@@ -84,6 +83,7 @@ const f1 = async (firstVenue: Venue) => {
       }
 
       edgeLists.push(edges);
+      console.log(i, requestsCount);
 
       if (nextVenues.length === 0) {
         break;
@@ -92,8 +92,6 @@ const f1 = async (firstVenue: Venue) => {
   } catch (e) {
     console.error(e);
   }
-
-  console.log(requestsCount);
 
   const now = new Date;
   const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
@@ -116,7 +114,7 @@ const f2 = async () => {
         client_secret: '',
         v: '20180323'
       },
-      "json": true
+      json: true
     });
     const firstVenue: Venue1 = body.response.venue;
     await f1(firstVenue);

@@ -48,6 +48,7 @@ const f1 = async (firstVenue: Venue) => {
             } catch (e) {
               if (e instanceof StatusCodeError && e.statusCode === 403) {
                 bail(e);
+                return;
               }
               throw e;
             }

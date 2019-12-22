@@ -1,0 +1,27 @@
+{
+  "name": "kc-14",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "dependencies": {
+    "async-retry": "^1.2.3",
+    "bluebird": "^3.7.2",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.8",
+    "source-map-support": "^0.5.16"
+  },
+  "devDependencies": {
+    "@types/async-retry": "^1.4.1",
+    "@types/bluebird": "^3.5.29",
+    "@types/request": "^2.48.3",
+    "@types/request-promise-native": "^1.0.17",
+    "typescript": "^3.7.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

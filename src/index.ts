@@ -5,6 +5,7 @@ import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
 import { Venue, Venue1 } from './Venue';
+import stringify from 'csv-stringify/lib/sync';
 
 const to_YYYYMMDD = (date: Date) =>
   `${date.getFullYear()}` +
@@ -95,10 +96,12 @@ const f1 = async (firstVenue: Venue) => {
   console.log(requestsCount);
 
   const now = new Date;
-  const dirname = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
-  await fs.promises.mkdir(dirname, { recursive: true });
+  const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
+  await fs.promises.mkdir(dirName, { recursive: true });
   for (const [i, edges] of edgeLists.entries()) {
-    fs.promises.writeFile(`${dirname}/${i}.csv`, edges.map(([v0, v1]) => `"${v0.name}","${v1.name}"`).join('\n'));
+    const fileName = `${dirName}/${i}.csv`;
+    const output = stringify(edges.map(([v0, v1]) => [v0.name, v1.name]));
+    fs.promises.writeFile(fileName, output);
   }
 };
 

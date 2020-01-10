@@ -6,7 +6,7 @@ import * as readline from 'readline';
 import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
-import { ConcurrentlyOnceExecutor, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
+import { ConcurrentlyOnceExecutor, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
 import { Venue1, Venue2 } from './Venue';
 
 const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[]> => {
@@ -32,12 +32,9 @@ const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[
     ),
     e => executor.exec(async () => {
       console.error(e);
-      return await new Promise<boolean>(resolve =>
-        rl.question('Retry? (yes) ', answer => {
-          const result = answer === '' || answer[0].toLowerCase() === 'y';
-          resolve(result);
-        })
-      );
+      const answer = await questionAsync(rl, 'Retry? (yes) ');
+      const result = answer === '' || answer[0].toLowerCase() === 'y';
+      return result;
     })
   );
   const nextVenues: readonly Venue1[] = body.response.nextVenues.items;

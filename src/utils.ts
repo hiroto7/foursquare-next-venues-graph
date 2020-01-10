@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import * as readline from 'readline';
 
 export const to_YYYYMMDD = (date: Date) =>
   `${date.getFullYear()}` +
@@ -44,3 +45,5 @@ export class ConcurrentlyOnceExecutor<T> {
   }
 }
 
+export const questionAsync = (rl: readline.Interface, query: string) =>
+  new Promise<string>(resolve => rl.question(query, resolve));

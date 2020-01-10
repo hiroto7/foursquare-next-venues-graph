@@ -2,46 +2,43 @@ import retry from 'async-retry';
 import Bluebird from 'bluebird';
 import stringify from 'csv-stringify/lib/sync';
 import * as fs from 'fs';
+import * as readline from 'readline';
 import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
+import { ConcurrentlyOnceExecutor, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
 import { Venue1, Venue2 } from './Venue';
 
-const to_YYYYMMDD = (date: Date) =>
-  `${date.getFullYear()}` +
-  `${date.getMonth() + 1}`.padStart(2, '0') +
-  `${date.getDate()}`.padStart(2, '0');
-
-const to_hhmmss = (date: Date) =>
-  `${date.getHours()}`.padStart(2, '0') +
-  `${date.getMinutes()}`.padStart(2, '0') +
-  `${date.getSeconds()}`.padStart(2, '0');
-
-const to_YYYYMMDDThhmmss = (date: Date) => `${to_YYYYMMDD(date)}T${to_hhmmss(date)}`;
-
 const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[]> => {
-  const body = await retry(
-    async bail => {
-      try {
-        return await rp({
-          url: `https://api.foursquare.com/v2/venues/${currentVenue.id}/nextvenues`,
-          method: 'GET',
-          qs: {
-            client_id: '',
-            client_secret: '',
-            v: '20180323'
-          },
-          json: true
-        });
-      } catch (e) {
-        if (e instanceof StatusCodeError && e.statusCode === 403) {
-          bail(e);
-          return;
+  const body = await retryWithConfirmation(
+    () => retry(
+      async bail => {
+        try {
+          return await rp({
+            url: `https://api.foursquare.com/v2/venues/${currentVenue.id}/nextvenues`,
+            method: 'GET',
+            qs: { client_id, client_secret, v },
+            json: true
+          });
+        } catch (e) {
+          if (e instanceof StatusCodeError && e.statusCode === 403) {
+            bail(e);
+            return;
+          }
+          throw e;
         }
-        throw e;
-      }
-    },
-    { onRetry: (e: Error, attempt: number) => console.error(e, attempt) }
+      },
+      { onRetry: (e: Error, attempt: number) => console.error(e, attempt) }
+    ),
+    e => executor.exec(async () => {
+      console.error(e);
+      return await new Promise<boolean>(resolve =>
+        rl.question('Retry? (yes) ', answer => {
+          const result = answer === '' || answer[0].toLowerCase() === 'y';
+          resolve(result);
+        })
+      );
+    })
   );
   const nextVenues: readonly Venue1[] = body.response.nextVenues.items;
   return nextVenues;
@@ -89,9 +86,7 @@ const f1 = async (firstVenue: Venue1) => {
         break;
       }
     }
-  } catch (e) {
-    console.error(e);
-  }
+  } catch { }
 
   const now = new Date;
   const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
@@ -109,11 +104,7 @@ const f2 = async () => {
     const body = await rp({
       url: `https://api.foursquare.com/v2/venues/${FIRST_VENUE_ID}`,
       method: 'GET',
-      qs: {
-        client_id: '',
-        client_secret: '',
-        v: '20180323'
-      },
+      qs: { client_id, client_secret, v },
       json: true
     });
     const firstVenue: Venue2 = body.response.venue;
@@ -121,5 +112,18 @@ const f2 = async () => {
   } catch (e) {
     console.error(e);
   }
+  rl.close();
 }
+
+const executor = new ConcurrentlyOnceExecutor<boolean>();
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+const { client_id, client_secret, v } = {
+  client_id: '',
+  client_secret: '',
+  v: '20180323'
+}
+
 f2();

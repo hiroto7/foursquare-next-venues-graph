@@ -7,7 +7,7 @@ import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
 import { ConcurrentlyOnceExecutor, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
-import { Venue1, Venue2 } from './Venue';
+import type { Venue1, Venue2 } from './Venue';
 
 const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[]> => {
   const body = await retryWithConfirmation(
@@ -41,9 +41,11 @@ const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[
   return nextVenues;
 }
 
-const f1 = async (firstVenue: Venue1) => {
+type EdgeList<T> = readonly (readonly [T, T])[];
+
+const getEdgeList = async (firstVenue: Venue1): Promise<EdgeList<Venue1>[]> => {
   const venues = new Map<string, Venue1>([[firstVenue.id, firstVenue]]);
-  const edgeLists: (readonly (readonly [Venue1, Venue1])[])[] = [[]];
+  const edgeLists: EdgeList<Venue1>[] = [[]];
   let nextVenues = [firstVenue];
   let requestsCount = 0;
 
@@ -55,7 +57,7 @@ const f1 = async (firstVenue: Venue1) => {
 
       const currentAndNextsPairs = await Bluebird.map(
         currentVenues,
-        async (currentVenue: Venue1) => ({
+        async currentVenue => ({
           currentVenue,
           nextVenues: await requestNextVenues(currentVenue),
         }),
@@ -85,17 +87,10 @@ const f1 = async (firstVenue: Venue1) => {
     }
   } catch { }
 
-  const now = new Date;
-  const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
-  await fs.promises.mkdir(dirName, { recursive: true });
-  for (const [i, edges] of edgeLists.entries()) {
-    const fileName = `${dirName}/${i}.csv`;
-    const output = stringify(edges.map(([v0, v1]) => [v0.name, v1.name]));
-    fs.promises.writeFile(fileName, output);
-  }
+  return edgeLists;
 };
 
-const f2 = async () => {
+const f = async () => {
   const FIRST_VENUE_ID = '4b19f917f964a520abe623e3';
   try {
     const body = await rp({
@@ -105,7 +100,16 @@ const f2 = async () => {
       json: true
     });
     const firstVenue: Venue2 = body.response.venue;
-    await f1(firstVenue);
+    const edgeLists = await getEdgeList(firstVenue);
+
+    const now = new Date;
+    const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
+    await fs.promises.mkdir(dirName, { recursive: true });
+    for (const [i, edges] of edgeLists.entries()) {
+      const fileName = `${dirName}/${i}.csv`;
+      const output = stringify(edges.map(([v0, v1]) => [v0.name, v1.name]));
+      fs.promises.writeFile(fileName, output);
+    }
   } catch (e) {
     console.error(e);
   }
@@ -123,4 +127,4 @@ const { client_id, client_secret, v } = {
   v: '20180323'
 }
 
-f2();
+f();

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import * as readline from 'readline';
+import type * as readline from 'readline';
 
 export const to_YYYYMMDD = (date: Date) =>
   `${date.getFullYear()}` +

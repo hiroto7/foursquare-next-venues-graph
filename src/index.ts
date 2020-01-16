@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import retry from 'async-retry';
 import Bluebird from 'bluebird';
 import stringify from 'csv-stringify/lib/sync';
@@ -53,7 +54,7 @@ const getEdgeLists = async (firstVenue: Venue1): Promise<{
   let requestsCount = 0;
 
   try {
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 250; i++) {
       const currentVenues = nextVenues;
       nextVenues = [];
       const edges = [...edgeLists[edgeLists.length - 1]];

@@ -17,7 +17,7 @@
     "@types/bluebird": "^3.5.29",
     "@types/request": "^2.48.4",
     "@types/request-promise-native": "^1.0.17",
-    "typescript": "^3.8.0-beta"
+    "typescript": "^3.8.0-dev.20200115"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

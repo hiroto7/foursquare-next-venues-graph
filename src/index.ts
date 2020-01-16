@@ -42,56 +42,59 @@ const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[
   return nextVenues;
 }
 
-type EdgeList<T> = readonly (readonly [T, T])[];
-
-const getEdgeLists = async (firstVenue: Venue1): Promise<{
+async function* getEdgeLists(firstVenue: Venue1): AsyncGenerator<{
+  iterationCount: number,
+  requestCount: number,
   venues: ReadonlyMap<string, Venue1>,
-  edgeLists: readonly EdgeList<Venue1>[],
-}> => {
+  edgeList: readonly (readonly [Venue1, Venue1])[],
+}, void, unknown> {
   const venues = new Map<string, Venue1>([[firstVenue.id, firstVenue]]);
-  const edgeLists: EdgeList<Venue1>[] = [[]];
+  const edgeList: (readonly [Venue1, Venue1])[] = [];
   let nextVenues = [firstVenue];
-  let requestsCount = 0;
+  let requestCount = 0;
+  let iterationCount = 0;
 
   try {
-    for (let i = 0; i < 250; i++) {
+    while (true) {
       const currentVenues = nextVenues;
       nextVenues = [];
-      const edges = [...edgeLists[edgeLists.length - 1]];
 
       const currentAndNextsPairs = await Bluebird.map(
         currentVenues,
         async currentVenue => ({
           currentVenue,
-          nextVenues: await requestNextVenues(currentVenue),
+          receivedNextVenues: await requestNextVenues(currentVenue),
         }),
         { concurrency: 10 }
       );
-      requestsCount += currentAndNextsPairs.length;
+      requestCount += currentAndNextsPairs.length;
 
-      for (const { currentVenue, nextVenues: items } of currentAndNextsPairs) {
-        for (const item of items) {
-          const venue1 = venues.get(item.id);
+      for (const { currentVenue, receivedNextVenues } of currentAndNextsPairs) {
+        for (const nextVenue of receivedNextVenues) {
+          const venue1 = venues.get(nextVenue.id);
           if (venue1 === undefined) {
-            venues.set(item.id, item);
-            edges.push([currentVenue, item]);
-            nextVenues.push(item);
+            venues.set(nextVenue.id, nextVenue);
+            edgeList.push([currentVenue, nextVenue]);
+            nextVenues.push(nextVenue);
           } else {
-            edges.push([currentVenue, venue1]);
+            edgeList.push([currentVenue, venue1]);
           }
         }
       }
 
-      edgeLists.push(edges);
-      console.log(i, requestsCount);
+      iterationCount += 1;
+      yield {
+        iterationCount,
+        requestCount,
+        venues: new Map(venues),
+        edgeList: [...edgeList],
+      }
 
       if (nextVenues.length === 0) {
-        break;
+        return;
       }
     }
   } catch { }
-
-  return { venues, edgeLists };
 };
 
 const f = async () => {
@@ -104,29 +107,26 @@ const f = async () => {
       json: true
     });
     const firstVenue: Venue2 = body.response.venue;
-    const { venues, edgeLists } = await getEdgeLists(firstVenue);
 
     const now = new Date;
     const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
 
-    {
-      const fileName = `${dirName}/venues.csv`;
-      const output = stringify([...venues].map(([id, venue]) => [id, venue.name]));
-      await fs.promises.mkdir(dirName, { recursive: true });
-      await fs.promises.writeFile(fileName, output);
-    }
-
-    const edgeListsDirName = `${dirName}/edge-lists`;
-    await Bluebird.map(
-      edgeLists,
-      async (edges, index) => {
-        const fileName = `${edgeListsDirName}/${index}.csv`;
-        const output = stringify(edges.map(([v0, v1]) => [v0.id, v1.id]));
-        await fs.promises.mkdir(edgeListsDirName, { recursive: true });
+    for await (const { iterationCount, requestCount, venues, edgeList } of getEdgeLists(firstVenue)) {
+      console.log(iterationCount, requestCount);
+      const innerDirName = `${dirName}/${iterationCount}`;
+      {
+        const fileName = `${innerDirName}/venues.csv`;
+        const output = stringify([...venues].map(([id, venue]) => [id, venue.name]));
+        await fs.promises.mkdir(innerDirName, { recursive: true });
         await fs.promises.writeFile(fileName, output);
-      },
-      { concurrency: 10 }
-    );
+      }
+      {
+        const fileName = `${innerDirName}/edge-list.csv`;
+        const output = stringify(edgeList.map(([v0, v1]) => [v0.id, v1.id]));
+        await fs.promises.mkdir(innerDirName, { recursive: true });
+        await fs.promises.writeFile(fileName, output);
+      }
+    }
   } catch (e) {
     console.error(e);
   }

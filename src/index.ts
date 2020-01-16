@@ -43,7 +43,10 @@ const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[
 
 type EdgeList<T> = readonly (readonly [T, T])[];
 
-const getEdgeList = async (firstVenue: Venue1): Promise<EdgeList<Venue1>[]> => {
+const getEdgeLists = async (firstVenue: Venue1): Promise<{
+  venues: ReadonlyMap<string, Venue1>,
+  edgeLists: readonly EdgeList<Venue1>[],
+}> => {
   const venues = new Map<string, Venue1>([[firstVenue.id, firstVenue]]);
   const edgeLists: EdgeList<Venue1>[] = [[]];
   let nextVenues = [firstVenue];
@@ -87,7 +90,7 @@ const getEdgeList = async (firstVenue: Venue1): Promise<EdgeList<Venue1>[]> => {
     }
   } catch { }
 
-  return edgeLists;
+  return { venues, edgeLists };
 };
 
 const f = async () => {
@@ -100,16 +103,29 @@ const f = async () => {
       json: true
     });
     const firstVenue: Venue2 = body.response.venue;
-    const edgeLists = await getEdgeList(firstVenue);
+    const { venues, edgeLists } = await getEdgeLists(firstVenue);
 
     const now = new Date;
     const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
-    await fs.promises.mkdir(dirName, { recursive: true });
-    for (const [i, edges] of edgeLists.entries()) {
-      const fileName = `${dirName}/${i}.csv`;
-      const output = stringify(edges.map(([v0, v1]) => [v0.name, v1.name]));
-      fs.promises.writeFile(fileName, output);
+
+    {
+      const fileName = `${dirName}/venues.csv`;
+      const output = stringify([...venues].map(([id, venue]) => [id, venue.name]));
+      await fs.promises.mkdir(dirName, { recursive: true });
+      await fs.promises.writeFile(fileName, output);
     }
+
+    const edgeListsDirName = `${dirName}/edge-lists`;
+    await Bluebird.map(
+      edgeLists,
+      async (edges, index) => {
+        const fileName = `${edgeListsDirName}/${index}.csv`;
+        const output = stringify(edges.map(([v0, v1]) => [v0.id, v1.id]));
+        await fs.promises.mkdir(edgeListsDirName, { recursive: true });
+        await fs.promises.writeFile(fileName, output);
+      },
+      { concurrency: 10 }
+    );
   } catch (e) {
     console.error(e);
   }

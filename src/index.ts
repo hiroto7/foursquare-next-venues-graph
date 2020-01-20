@@ -7,7 +7,7 @@ import * as readline from 'readline';
 import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
-import { ConcurrentlyOnceExecutor, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
+import { ConcurrentlyOnceExecutor, is2Power, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
 import type { Venue1, Venue2 } from './Venue';
 
 const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[]> => {
@@ -97,6 +97,27 @@ async function* getEdgeLists(firstVenue: Venue1): AsyncGenerator<{
   } catch { }
 };
 
+const writeEdgeLists = async ({ iterationCount, venues, edgeList, dirName }: {
+  iterationCount: number,
+  venues: ReadonlyMap<string, Venue1>,
+  edgeList: readonly (readonly [Venue1, Venue1])[],
+  dirName: string,
+}) => {
+  const innerDirName = `${dirName}/${iterationCount}`;
+  {
+    const fileName = `${innerDirName}/venues.csv`;
+    const output = stringify([...venues].map(([id, venue]) => [id, venue.name]));
+    await fs.promises.mkdir(innerDirName, { recursive: true });
+    await fs.promises.writeFile(fileName, output);
+  }
+  {
+    const fileName = `${innerDirName}/edge-list.csv`;
+    const output = stringify(edgeList.map(([v0, v1]) => [v0.id, v1.id]));
+    await fs.promises.mkdir(innerDirName, { recursive: true });
+    await fs.promises.writeFile(fileName, output);
+  }
+};
+
 const f = async () => {
   const FIRST_VENUE_ID = '4b19f917f964a520abe623e3';
   try {
@@ -111,21 +132,23 @@ const f = async () => {
     const now = new Date;
     const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
 
+    let lastResult: {
+      iterationCount: number,
+      venues: ReadonlyMap<string, Venue1>,
+      edgeList: readonly (readonly [Venue1, Venue1])[],
+    } | undefined = undefined;
     for await (const { iterationCount, requestCount, venues, edgeList } of getEdgeLists(firstVenue)) {
       console.log(iterationCount, requestCount);
-      const innerDirName = `${dirName}/${iterationCount}`;
-      {
-        const fileName = `${innerDirName}/venues.csv`;
-        const output = stringify([...venues].map(([id, venue]) => [id, venue.name]));
-        await fs.promises.mkdir(innerDirName, { recursive: true });
-        await fs.promises.writeFile(fileName, output);
+      if (is2Power(iterationCount)) {
+        lastResult = undefined;
+        await writeEdgeLists({ iterationCount, venues, edgeList, dirName });
+      } else {
+        lastResult = { iterationCount, venues, edgeList };
       }
-      {
-        const fileName = `${innerDirName}/edge-list.csv`;
-        const output = stringify(edgeList.map(([v0, v1]) => [v0.id, v1.id]));
-        await fs.promises.mkdir(innerDirName, { recursive: true });
-        await fs.promises.writeFile(fileName, output);
-      }
+    }
+
+    if (lastResult !== undefined) {
+      await writeEdgeLists({ ...lastResult, dirName });
     }
   } catch (e) {
     console.error(e);

@@ -1,5 +1,5 @@
-import { Photo2 } from "./Photo";
-import { User } from "./User";
+import type { Photo2 } from "./Photo";
+import type { User } from "./User";
 
 export interface List {
   id: string;

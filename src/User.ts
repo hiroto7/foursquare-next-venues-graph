@@ -1,6 +1,6 @@
-import { Contact } from "./Contact";
-import { Photo } from "./Photo";
-import { Venue } from "./Venue";
+import type { Contact } from "./Contact";
+import type { Photo } from "./Photo";
+import type { Venue } from "./Venue";
 
 export interface User {
   id: string;

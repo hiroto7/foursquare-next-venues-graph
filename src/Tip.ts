@@ -1,7 +1,7 @@
-import { Lang } from "./Lang";
-import { Likes } from "./Likes";
-import { Photo1 } from "./Photo";
-import { User } from "./User";
+import type { Lang } from "./Lang";
+import type { Likes } from "./Likes";
+import type { Photo1 } from "./Photo";
+import type { User } from "./User";
 
 export interface Tip {
   id: string;

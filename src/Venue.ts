@@ -1,10 +1,10 @@
-import { Contact } from './Contact';
-import { Lang } from './Lang';
-import { Likes } from './Likes';
-import { List } from './List';
-import { Photo1, Photo2 } from "./Photo";
-import { Tip } from './Tip';
-import { User1 } from './User';
+import type { Contact } from './Contact';
+import type { Lang } from './Lang';
+import type { Likes } from './Likes';
+import type { List } from './List';
+import type { Photo1, Photo2 } from "./Photo";
+import type { Tip } from './Tip';
+import type { User1 } from './User';
 
 export interface Venue {
   id: string;

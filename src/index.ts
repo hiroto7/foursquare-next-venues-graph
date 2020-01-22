@@ -7,10 +7,13 @@ import * as readline from 'readline';
 import rp from 'request-promise-native';
 import { StatusCodeError } from 'request-promise-native/errors';
 import 'source-map-support/register';
-import { ConcurrentlyOnceExecutor, is2Power, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
+import { ConcurrentlyOneExecutor, is2Power, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
 import type { Venue1, Venue2 } from './Venue';
 
-const requestNextVenues = async (currentVenue: Venue1): Promise<readonly Venue1[]> => {
+const requestNextVenues = async (
+  currentVenue: Venue1,
+  executor: ConcurrentlyOneExecutor<boolean>
+): Promise<readonly Venue1[]> => {
   const body = await retryWithConfirmation(
     () => retry(
       async bail => {
@@ -56,14 +59,15 @@ async function* getEdgeLists(firstVenue: Venue1): AsyncGenerator<{
 
   try {
     while (true) {
-      const currentVenues = nextVenues;
+      const currentVenues: readonly Venue1[] = nextVenues;
       nextVenues = [];
 
+      const executor = new ConcurrentlyOneExecutor<boolean>(currentVenues.length);
       const currentAndNextsPairs = await Bluebird.map(
         currentVenues,
         async currentVenue => ({
           currentVenue,
-          receivedNextVenues: await requestNextVenues(currentVenue),
+          receivedNextVenues: await requestNextVenues(currentVenue, executor),
         }),
         { concurrency: 10 }
       );
@@ -156,7 +160,6 @@ const f = async () => {
   rl.close();
 }
 
-const executor = new ConcurrentlyOnceExecutor<boolean>();
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,

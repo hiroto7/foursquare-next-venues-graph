@@ -33,10 +33,18 @@ export const retryWithConfirmation =
     }
   }
 
-export class ConcurrentlyOnceExecutor<T> {
+export class ConcurrentlyOneExecutor<T> {
   readonly #resolveEvent = 'resolve';
   readonly #rejectEvent = 'resolve';
+  readonly #maxListeners: number;
   #ee?: EventEmitter;
+
+  /**
+   * @param maxListeners このインスタンスの `exec()` の、最大同時実行数
+   */
+  constructor(maxListeners: number) {
+    this.#maxListeners = maxListeners;
+  }
 
   /**
    * ひとつのインスタンスにつき、あるタイミングでひとつの `fn` のみが実行されるようにする。
@@ -50,6 +58,7 @@ export class ConcurrentlyOnceExecutor<T> {
     return new Promise(async (resolve, reject) => {
       if (this.#ee === undefined) {
         const ee = new EventEmitter();
+        ee.setMaxListeners(this.#maxListeners);
         this.#ee = ee;
         try {
           const result: T = await fn();

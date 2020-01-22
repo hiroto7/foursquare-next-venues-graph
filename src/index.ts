@@ -138,7 +138,7 @@ const f = async () => {
       edgeList: readonly (readonly [Venue1, Venue1])[],
     } | undefined = undefined;
     for await (const { iterationCount, requestCount, venues, edgeList } of getEdgeLists(firstVenue)) {
-      console.log(iterationCount, requestCount);
+      console.log(new Date, iterationCount, requestCount);
       if (is2Power(iterationCount)) {
         lastResult = undefined;
         await writeEdgeLists({ iterationCount, venues, edgeList, dirName });

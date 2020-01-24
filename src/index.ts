@@ -110,7 +110,13 @@ const writeEdgeLists = async ({ iterationCount, venues, edgeList, dirName }: {
   const innerDirName = `${dirName}/${iterationCount}`;
   {
     const fileName = `${innerDirName}/venues.csv`;
-    const output = stringify([...venues].map(([id, venue]) => [id, venue.name]));
+    const output = stringify([...venues].map(([id, venue]) => [
+      id,
+      venue.name,
+      venue.location.country,
+      venue.location.state,
+      venue.location.city,
+    ]));
     await fs.promises.mkdir(innerDirName, { recursive: true });
     await fs.promises.writeFile(fileName, output);
   }

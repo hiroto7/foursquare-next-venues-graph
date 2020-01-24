@@ -17,7 +17,7 @@ export interface Venue1 extends Venue {
 }
 
 interface Location {
-  address: string;
+  address?: string;
   crossStreet?: string;
   lat: number;
   lng: number;

@@ -129,10 +129,10 @@ const writeEdgeLists = async ({ iterationCount, venues, edgeList, dirName }: {
 };
 
 const f = async () => {
-  const FIRST_VENUE_ID = '4b19f917f964a520abe623e3';
+  const firstVenueId = process.argv[2];
   try {
     const body = await rp({
-      url: `https://api.foursquare.com/v2/venues/${FIRST_VENUE_ID}`,
+      url: `https://api.foursquare.com/v2/venues/${firstVenueId}`,
       method: 'GET',
       qs: { client_id, client_secret, v },
       json: true

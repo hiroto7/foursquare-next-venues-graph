@@ -141,6 +141,7 @@ const f = async () => {
 
     const now = new Date;
     const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
+    console.log(now, firstVenue.name);
 
     let lastResult: {
       iterationCount: number,
@@ -150,6 +151,7 @@ const f = async () => {
     for await (const { iterationCount, requestCount, venues, edgeList } of getEdgeLists(firstVenue)) {
       console.log(new Date, iterationCount, requestCount);
       if (is2Power(iterationCount)) {
+        // iterationCount が2の冪乗数であれば、この時点での venues と edgeList をファイルに書き出す
         lastResult = undefined;
         await writeEdgeLists({ iterationCount, venues, edgeList, dirName });
       } else {
@@ -158,6 +160,7 @@ const f = async () => {
     }
 
     if (lastResult !== undefined) {
+      // 最後の反復での venues と edgeList をファイルに書き出す
       await writeEdgeLists({ ...lastResult, dirName });
     }
   } catch (e) {

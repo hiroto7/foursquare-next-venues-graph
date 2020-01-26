@@ -10,10 +10,14 @@ import 'source-map-support/register';
 import { ConcurrentlyOneExecutor, is2Power, questionAsync, retryWithConfirmation, to_YYYYMMDDThhmmss } from './utils';
 import type { Venue1, Venue2 } from './Venue';
 
-const requestNextVenues = async (
+const requestNextVenues = async ({ currentVenue, executor, client_id, client_secret, v, rl }: {
   currentVenue: Venue1,
-  executor: ConcurrentlyOneExecutor<boolean>
-): Promise<readonly Venue1[]> => {
+  executor: ConcurrentlyOneExecutor<boolean>,
+  client_id: string,
+  client_secret: string,
+  v: string,
+  rl: readline.Interface,
+}): Promise<readonly Venue1[]> => {
   const body = await retryWithConfirmation(
     () => retry(
       async bail => {
@@ -45,7 +49,13 @@ const requestNextVenues = async (
   return nextVenues;
 }
 
-async function* getEdgeLists(firstVenue: Venue1): AsyncGenerator<{
+async function* getEdgeLists({ firstVenue, client_id, client_secret, v, rl }: {
+  firstVenue: Venue1,
+  client_id: string,
+  client_secret: string,
+  v: string,
+  rl: readline.Interface,
+}): AsyncGenerator<{
   iterationCount: number,
   requestCount: number,
   venues: ReadonlyMap<string, Venue1>,
@@ -67,7 +77,7 @@ async function* getEdgeLists(firstVenue: Venue1): AsyncGenerator<{
         currentVenues,
         async currentVenue => ({
           currentVenue,
-          receivedNextVenues: await requestNextVenues(currentVenue, executor),
+          receivedNextVenues: await requestNextVenues({ currentVenue, executor, client_id, client_secret, v, rl }),
         }),
         { concurrency: 10 }
       );
@@ -130,7 +140,24 @@ const writeEdgeLists = async ({ iterationCount, venues, edgeList, dirName }: {
 
 const f = async () => {
   const firstVenueId = process.argv[2];
+  const v = '20200126';
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
   try {
+    const client_id = process.env.CLIENT_ID;
+    if (client_id === undefined) {
+      throw new Error();
+    }
+
+    const client_secret = process.env.CLIENT_SECRET;
+    if (client_secret === undefined) {
+      throw new Error();
+    }
+
     const body = await rp({
       url: `https://api.foursquare.com/v2/venues/${firstVenueId}`,
       method: 'GET',
@@ -148,7 +175,10 @@ const f = async () => {
       venues: ReadonlyMap<string, Venue1>,
       edgeList: readonly (readonly [Venue1, Venue1])[],
     } | undefined = undefined;
-    for await (const { iterationCount, requestCount, venues, edgeList } of getEdgeLists(firstVenue)) {
+    for await (
+      const { iterationCount, requestCount, venues, edgeList } of
+      getEdgeLists({ firstVenue, client_id, client_secret, v, rl })
+    ) {
       console.log(new Date, iterationCount, requestCount);
       if (is2Power(iterationCount)) {
         // iterationCount が2の冪乗数であれば、この時点での venues と edgeList をファイルに書き出す
@@ -166,17 +196,8 @@ const f = async () => {
   } catch (e) {
     console.error(e);
   }
+
   rl.close();
 }
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-const { client_id, client_secret, v } = {
-  client_id: '',
-  client_secret: '',
-  v: '20180323'
-}
-
-f();
+f()

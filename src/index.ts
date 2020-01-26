@@ -138,6 +138,16 @@ const writeEdgeLists = async ({ iterationCount, venues, edgeList, dirName }: {
   }
 };
 
+const getNameForURL = (venue: Venue2) => {
+  const re = new RegExp(`/(?<encodedNameForURL>[^/]+)/${venue.id}$`);
+  const encodedNameForURL = venue.canonicalUrl.match(re)?.groups?.encodedNameForURL;
+  if (encodedNameForURL === undefined) {
+    return undefined;
+  } else {
+    return decodeURIComponent(encodedNameForURL);
+  }
+}
+
 const f = async () => {
   const firstVenueId = process.argv[2];
   const v = '20200126';
@@ -167,7 +177,11 @@ const f = async () => {
     const firstVenue: Venue2 = body.response.venue;
 
     const now = new Date;
-    const dirName = `./out/${to_YYYYMMDDThhmmss(now)}-${firstVenue.name}`;
+    const nameForURL = getNameForURL(firstVenue);
+    if (nameForURL === undefined) {
+      throw new Error();
+    }
+    const dirName = `${process.cwd()}/${to_YYYYMMDDThhmmss(now)}-${firstVenueId}-${nameForURL}`;
     console.log(now, firstVenue.name);
 
     let lastResult: {

@@ -7,7 +7,8 @@ export interface Tip {
   id: string;
   createdAt: number,
   text: string;
-  type: "user",
+  type: "user";
+  url?: string;
   canonicalUrl: string;
   photo?: Photo1;
   photourl?: string;

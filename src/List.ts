@@ -5,17 +5,27 @@ export interface List {
   id: string;
   name: string;
   description: string;
-  type: "others",
-  user: User,
-  editable: false,
-  public: true,
-  collaborative: boolean,
+  entities?: [
+    {
+      indices: [number, number],
+      type: "url",
+      object: {
+        "url": string
+      }
+    }
+  ];
+  type: "others";
+  user: User;
+  editable: false;
+  public: true;
+  collaborative: boolean;
   url: string;
   canonicalUrl: string;
-  createdAt: number,
-  updatedAt: number,
+  createdAt: number;
+  updatedAt: number;
   photo?: Photo2;
   logView?: true;
+  readMoreUrl?: string,
   guideType?: "bestOf";
   guide?: true;
   followers: {
@@ -26,9 +36,7 @@ export interface List {
 
 interface ListItems {
   count: number;
-  items: [
-    ListItem
-  ];
+  items: ListItem[];
 }
 
 interface ListItem {

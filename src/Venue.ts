@@ -14,6 +14,8 @@ export interface Venue1 extends Venue {
   name: string;
   location: Location;
   categories: Category[];
+  delivery?: Delivery;
+  venuePage?: VenuePage;
 }
 
 interface Location {
@@ -52,6 +54,23 @@ interface Icon {
   suffix: string;
 }
 
+interface Delivery {
+  id: string;
+  url: string;
+  provider: {
+    name: "seamless";
+    icon: {
+      prefix: "https://fastly.4sqi.net/img/general/cap/";
+      sizes: [40, 50];
+      name: "/delivery_provider_seamless_20180129.png";
+    };
+  };
+}
+
+interface VenuePage {
+  id: string;
+}
+
 export interface Venue2 extends Venue1 {
   contact: Contact;
   canonicalUrl: string;
@@ -59,18 +78,19 @@ export interface Venue2 extends Venue1 {
   stats: Stats;
   price?: Price;
   url?: string;
+  hasMenu?: boolean;
   likes: Likes;
   dislike: boolean;
   ok: boolean;
   rating: number;
   ratingColor: string;
   ratingSignals: number;
-  allowMenuUrlEdit?: true,
+  menu?: Menu;
+  allowMenuUrlEdit?: true;
   beenHere: BeenHere;
   specials: Specials;
   events?: Events;
   photos: Photos;
-  venuePage?: VenuePage;
   reasons: Reasons;
   description?: string;
   storeId?: "";
@@ -96,12 +116,31 @@ interface Stats {
   checkinsCount?: number;
   usersCount?: number;
   tipCount: number;
+  visitsCount?: number;
 }
 
 interface Price {
-  tier: 2;
-  message: "Moderate";
+  tier: 1 | 2;
+  message: "Cheap" | "Moderate";
   currency: "$";
+}
+
+type Menu = ({
+  type: "Prices";
+  label: "Prices";
+  anchor: "View Prices";
+} | {
+  type: "Menu";
+  label: "Menu";
+  anchor: "View Menu";
+} | {
+  type: "Products";
+  label: "Products";
+  anchor: "View Products";
+}) & {
+  url: string;
+  mobileUrl: string;
+  externalUrl?: string;
 }
 
 interface BeenHere {
@@ -131,9 +170,6 @@ interface Photos {
       items: Photo2[];
     }
   ]
-}
-interface VenuePage {
-  id: string;
 }
 
 interface Reasons {
@@ -165,15 +201,13 @@ interface Reasons {
 
 interface Page {
   pageInfo?: {
-    description: string;
+    description?: string;
     banner: string;
     links: {
-      count: 1;
-      items: [
-        {
-          url: string;
-        }
-      ];
+      count: 0 | 1;
+      items: {
+        url: string;
+      }[];
     };
   };
   user: User1;
@@ -201,7 +235,7 @@ interface Tips {
   }[];
 }
 
-type TimeZone = "Asia/Tokyo" | "America/New_York";
+type TimeZone = "Asia/Tokyo" | "America/New_York" | "America/Denver";
 
 interface Listed {
   count: number;

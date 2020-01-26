@@ -1,4 +1,3 @@
-import type { Contact } from "./Contact";
 import type { Photo } from "./Photo";
 import type { Venue } from "./Venue";
 
@@ -6,7 +5,7 @@ export interface User {
   id: string;
   firstName: string;
   lastName?: string;
-  gender: "none" | "male" | "female";
+  // gender: "none" | "male" | "female";
   photo: Photo;
   type?: "chain" | "page" | "venuePage";
   venue?: Venue;
@@ -25,7 +24,7 @@ export interface User1 extends User {
       }
     ]
   };
-  homeCity: string;
+  // homeCity: string;
   bio: string;
-  contact: Contact;
+  // contact: Contact;
 }

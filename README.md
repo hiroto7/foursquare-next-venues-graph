@@ -1,4 +1,4 @@
-# KC-14
+# foursquare-next-venues-graph
 
 ## Installing
 ```
@@ -9,5 +9,5 @@ npm install hiroto7/kc-14
 ```
 export CLIENT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 export CLIENT_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-kc-14 4b19f917f964a520abe623e3
+foursquare-next-venues-graph 4b19f917f964a520abe623e3
 ```

@@ -149,7 +149,6 @@ const getNameForURL = (venue: Venue2) => {
 }
 
 const f = async () => {
-  const firstVenueId = process.argv[2];
   const v = '20200126';
 
   const rl = readline.createInterface({
@@ -158,6 +157,11 @@ const f = async () => {
   });
 
   try {
+    const firstVenueId = process.argv[2];
+    if (firstVenueId === undefined) {
+      throw new Error();
+    }
+
     const client_id = process.env.FOURSQUARE_CLIENT_ID;
     if (client_id === undefined) {
       throw new Error();

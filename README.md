@@ -12,7 +12,7 @@ npm install -g hiroto7/foursquare-next-venues-graph
 実行前に、環境変数で `FOURSQUARE_CLIENT_ID` と `FOURSQUARE_CLIENT_SECRET` を設定する必要がある。
 
 下記の内容を `.bash_profile` などに追加する。
-もしくは、 [direnv]([hook.md](http://direnv.net)) を使用していれば、
+もしくは、 [direnv](http://direnv.net) を使用していれば、
 適当なディレクトリに下記内容の `.envrc` ファイルを作成しても良い。
 ```
 export FOURSQUARE_CLIENT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

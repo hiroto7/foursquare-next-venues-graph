@@ -2,7 +2,7 @@
 
 ## Installing
 ```
-npm install hiroto7/kc-14
+npm install hiroto7/foursquare-next-venues-graph
 ```
 
 ## Usage

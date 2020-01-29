@@ -40,7 +40,8 @@ export class ConcurrentlyOneExecutor<T> {
   #ee?: EventEmitter;
 
   /**
-   * @param maxListeners このインスタンスの `exec()` の、最大同時実行数
+   * @param maxListeners このインスタンスの `exec()` の最大同時実行数。
+   * この数を超えて同時に実行すると、 `MaxListenersExceededWarning` が発生する
    */
   constructor(maxListeners: number) {
     this.#maxListeners = maxListeners;

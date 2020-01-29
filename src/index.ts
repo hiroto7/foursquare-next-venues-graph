@@ -158,12 +158,12 @@ const f = async () => {
   });
 
   try {
-    const client_id = process.env.CLIENT_ID;
+    const client_id = process.env.FOURSQUARE_CLIENT_ID;
     if (client_id === undefined) {
       throw new Error();
     }
 
-    const client_secret = process.env.CLIENT_SECRET;
+    const client_secret = process.env.FOURSQUARE_CLIENT_SECRET;
     if (client_secret === undefined) {
       throw new Error();
     }

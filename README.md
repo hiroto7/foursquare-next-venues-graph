@@ -21,7 +21,9 @@ export FOURSQUARE_CLIENT_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 ## Usage
 ### グラフの構築
-適当なディレクトリに移動してから、引数に**起点となる Venue の id** を指定して `foursquare-next-venues-graph` コマンドを実行する。以下は [つくば駅](https://foursquare.com/v/%E3%81%A4%E3%81%8F%E3%81%B0%E9%A7%85/4b5522aff964a5206edc27e3) を起点とした場合の例である。
+適当なディレクトリに移動してから、引数に**起点となる Venue の id** を指定して `foursquare-next-venues-graph` コマンドを実行する。 Venue の id が分からない場合、 [Foursquare City Guide](https://foursquare.com/city-guide) で該当の Venue のページにアクセスして、 URL に含まれる id を調べれば良い。
+
+以下は [つくば駅](https://foursquare.com/v/%E3%81%A4%E3%81%8F%E3%81%B0%E9%A7%85/4b5522aff964a5206edc27e3) を起点とした場合の例である。
 ```
 $ foursquare-next-venues-graph 4b5522aff964a5206edc27e3
 2020-01-29T21:20:28.310Z Tsukuba Station (つくば駅)
